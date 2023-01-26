@@ -47,6 +47,7 @@ from starlite.enums import (
     RequestEncodingType,
     ScopeType,
 )
+from starlite.events import EventListener, listener
 from starlite.exceptions import (
     HTTPException,
     ImproperlyConfiguredException,
@@ -92,9 +93,12 @@ from starlite.response import Response
 from starlite.router import Router
 from starlite.routes import ASGIRoute, BaseRoute, HTTPRoute, WebSocketRoute
 from starlite.security import AbstractSecurityConfig
-from starlite.testing.client.async_client import AsyncTestClient
-from starlite.testing.client.sync_client import TestClient
-from starlite.testing.create_test_client import create_test_client
+from starlite.testing import (
+    AsyncTestClient,
+    TestClient,
+    create_async_test_client,
+    create_test_client,
+)
 from starlite.types.partial import Partial
 
 __all__ = (
@@ -111,6 +115,7 @@ __all__ = (
     "AbstractSyncCursorPaginator",
     "AbstractSyncOffsetPaginator",
     "AllowedHostsConfig",
+    "AsyncTestClient",
     "AuthenticationResult",
     "BackgroundTask",
     "BackgroundTasks",
@@ -129,6 +134,7 @@ __all__ = (
     "DTOFactory",
     "DefineMiddleware",
     "Dependency",
+    "EventListener",
     "File",
     "FormMultiDict",
     "HTTPException",
@@ -173,7 +179,6 @@ __all__ = (
     "Template",
     "TemplateConfig",
     "TestClient",
-    "AsyncTestClient",
     "TooManyRequestsException",
     "UploadFile",
     "ValidationException",
@@ -182,10 +187,12 @@ __all__ = (
     "WebSocketRoute",
     "WebsocketRouteHandler",
     "asgi",
+    "create_async_test_client",
     "create_test_client",
     "delete",
     "get",
     "head",
+    "listener",
     "patch",
     "post",
     "put",

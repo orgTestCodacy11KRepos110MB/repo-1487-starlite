@@ -26,6 +26,7 @@ from starlite.types import (
     TypeEncodersMap,
 )
 
+from ..events.listener import EventListener
 from . import AllowedHostsConfig
 from .cache import CacheConfig
 from .compression import CompressionConfig
@@ -126,6 +127,8 @@ class AppConfig(BaseModel):
     """A dictionary that maps handler functions to status codes and/or exception types."""
     guards: List[Guard]
     """A list of :class:`Guard <starlite.types.Guard>` callables."""
+    listeners: Optional[List[EventListener]]
+    """A list of :class:`EventListener <starlite.events.listener.EventListener>`."""
     logging_config: Optional[BaseLoggingConfig]
     """An instance of :class:`BaseLoggingConfig <starlite.config.logging.BaseLoggingConfig>` subclass."""
     middleware: List[Middleware]

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 from functools import partial
 from pathlib import Path
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
         TemplateConfig,
     )
     from starlite.datastructures import CacheControlHeader, ETag, Provide
+    from starlite.events.listener import EventListener
     from starlite.handlers.base import BaseRouteHandler
     from starlite.plugins.base import PluginProtocol
     from starlite.types import (
@@ -141,6 +143,7 @@ class Starlite(Router):
         "csrf_config",
         "debug",
         "get_logger",
+        "listeners",
         "logger",
         "logging_config",
         "on_shutdown",
@@ -181,6 +184,7 @@ class Starlite(Router):
         exception_handlers: Optional["ExceptionHandlersMap"] = None,
         guards: Optional[List["Guard"]] = None,
         initial_state: Optional[Union["ImmutableState", Dict[str, Any], Iterable[Tuple[str, Any]]]] = None,
+        listeners: Optional[List["EventListener"]] = None,
         logging_config: Optional["BaseLoggingConfig"] = None,
         middleware: Optional[List["Middleware"]] = None,
         on_app_init: Optional[List["OnAppInitHandler"]] = None,
@@ -244,6 +248,7 @@ class Starlite(Router):
             exception_handlers: A dictionary that maps handler functions to status codes and/or exception types.
             guards: A list of :class:`Guard <starlite.types.Guard>` callables.
             initial_state: An object from which to initialize the app state.
+            listeners: A list of :class:`EventListener <starlite.events.listener.EventListener>`.
             logging_config: A subclass of :class:`BaseLoggingConfig <starlite.config.logging.BaseLoggingConfig>`.
             middleware: A list of :class:`Middleware <starlite.types.Middleware>`.
             on_app_init: A sequence of :class:`OnAppInitHandler <starlite.types.OnAppInitHandler>` instances. Handlers receive
@@ -306,6 +311,7 @@ class Starlite(Router):
             etag=etag,
             exception_handlers=exception_handlers or {},
             guards=guards or [],
+            listeners=listeners,
             logging_config=logging_config,
             middleware=middleware or [],
             on_shutdown=on_shutdown or [],
@@ -373,6 +379,12 @@ class Starlite(Router):
             tags=config.tags,
             type_encoders=config.type_encoders,
         )
+
+        self.listeners = defaultdict(list)
+
+        for listener in config.listeners or []:
+            self.listeners[listener.event_id].append(listener.fn)
+
         for plugin in self.plugins:
             plugin.on_app_init(app=self)
 
@@ -729,3 +741,18 @@ class Starlite(Router):
         self.openapi_schema = construct_open_api_with_schema_class(
             open_api_schema=self.openapi_schema, by_alias=self.openapi_config.by_alias
         )
+
+    async def emit(self, event_id: str, *args: Any, **kwargs: Any) -> None:
+        """Emit an event to all attached listeners.
+
+        :param event_id: The ID of the event to emit, e.g 'my_event'.
+        :param args: args to pass to the listener(s).
+        :param kwargs: kwargs to pass to the listener(s)
+        :return: None
+        """
+        if listeners := self.listeners.get(event_id):
+            for listener in listeners:
+                await listener(*args, **kwargs)
+            return
+
+        raise ImproperlyConfiguredException(f"no event listeners are registered for the event ID: {event_id}")
