@@ -17,8 +17,7 @@ from starlite import (
 from starlite.datastructures import Cookie, MultiDict
 from starlite.enums import ParamType
 from starlite.middleware.session import SessionCookieConfig
-from starlite.testing import RequestFactory, TestClient
-from starlite.testing.create_test_client import create_test_client
+from starlite.testing import RequestFactory, TestClient, create_test_client
 from tests import Pet, PetFactory
 
 if TYPE_CHECKING:
